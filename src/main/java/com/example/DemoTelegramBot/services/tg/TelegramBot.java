@@ -1,7 +1,9 @@
 package com.example.DemoTelegramBot.services.tg;
 
+import com.example.DemoTelegramBot.models.Category;
 import com.example.DemoTelegramBot.models.TelegramUser;
 import com.example.DemoTelegramBot.repositories.TelegramUserRepository;
+import com.example.DemoTelegramBot.services.CategoryService;
 import com.example.DemoTelegramBot.services.TelegramUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.http.util.TimeStamp;
@@ -20,28 +22,35 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Component
 @Slf4j
 public class TelegramBot extends TelegramLongPollingBot {
     @Autowired
     private TelegramUserService telegramUserService;
+    @Autowired
+    private CategoryService categoryService;
     static final String HELP_MSQ= "Available commands:\n\n"+
             "Type /start to see a welcome message\n\n"+
-            "Type /mydata to see data about yourself\n\n"+
-            "Type /deletedata to delete stored data abou youself\n\n"+
+            "Type /viewTree to see data about yourself\n\n"+
+            "Type /addElement to delete stored data abou youself\n\n"+
+            "Type /addChildElement to delete stored data abou youself\n\n"+
             "Type /help to see this message again\n\n";
 
     public TelegramBot(@Value("${bot.key}") String botToken) {
         super(botToken);
-        List<BotCommand> list=new ArrayList<>();
-        list.add(new BotCommand("/start","get a welcome message"));
-        list.add(new BotCommand("/mydata","get your data"));
-        list.add(new BotCommand("/help","get info how to use bot"));
-        list.add(new BotCommand("/settings","set your preferences"));
+        List<BotCommand> lists=new ArrayList<>();
+        lists.add(new BotCommand("/start","get a welcome message"));
+        lists.add(new BotCommand("/viewTree","view tree"));
+        lists.add(new BotCommand("/addElement","get info how to use bot"));
+        lists.add(new BotCommand("/addChildElement","get info how to use bot"));
+        lists.add(new BotCommand("/removeElement","set your preferences"));
+        lists.add(new BotCommand("/help","set your preferences"));
         try {
-            this.execute(new SetMyCommands(list,new BotCommandScopeDefault(),null));
+            this.execute(new SetMyCommands(lists,new BotCommandScopeDefault(),null));
         }catch (TelegramApiException e){
             log.error("Error, settings bot's command list: "+ e.getMessage());
         }
@@ -57,6 +66,15 @@ public class TelegramBot extends TelegramLongPollingBot {
                 case "/start":
                     startCommandReceived(chatId,update.getMessage().getChat().getFirstName());
                     registerUser(update.getMessage());
+                    break;
+                case "/viewTree":
+                    sendCategoryTree(chatId,categoryService.getTree());
+                    break;
+                case "/addElement":
+                    break;
+                case "/addChildElement":
+                    break;
+                case "removeElement":
                     break;
                 case "/help":
                     startCommandReceived(chatId,HELP_MSQ);
@@ -106,4 +124,27 @@ public class TelegramBot extends TelegramLongPollingBot {
             log.error("ERROR OCCURED: "+e.getMessage());
         }
     }
+
+    public void sendCategoryTree(Long chatId, List<Category> categories){
+        StringBuilder message = new StringBuilder("ДЕРЕВО КАТЕГОРИИ:\n");
+        Set<Long> printedCategories = new HashSet<>();
+        formatCategoryTree(message, categories, 0, printedCategories);
+        sendMessage(chatId, String.valueOf(message));
+    }
+
+    public void formatCategoryTree(StringBuilder message, List<Category> categories, int level, Set<Long> printedCategories) {
+        for (Category category : categories) {
+            if (printedCategories.add(category.getId())) {
+                for (int i = 0; i < level; i++) {
+                    message.append("    ");
+                }
+                message.append("-- ").append(category.getName()).append("\n");
+                List<Category> children = categoryService.findChildrenByParentId(category.getId());
+                if (!children.isEmpty()) {
+                    formatCategoryTree(message, children, level + 1, printedCategories);
+                }
+            }
+        }
+    }
+
 }
