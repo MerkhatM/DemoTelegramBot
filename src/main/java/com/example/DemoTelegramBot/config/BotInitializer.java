@@ -1,6 +1,6 @@
 package com.example.DemoTelegramBot.config;
 
-import com.example.DemoTelegramBot.services.TelegramBot;
+import com.example.DemoTelegramBot.services.tg.TelegramBot;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
