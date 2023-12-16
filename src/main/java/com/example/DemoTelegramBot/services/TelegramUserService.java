@@ -12,11 +12,11 @@ public class TelegramUserService {
     @Autowired
     private TelegramUserRepository telegramUserRepository;
 
-    public Optional<TelegramUser> getUser(Long chatId){
+    public Optional<TelegramUser> getUser(Long chatId) {
         return telegramUserRepository.findById(chatId);
     }
 
-    public void addUser(TelegramUser telegramUser){
+    public void addUser(TelegramUser telegramUser) {
         telegramUserRepository.save(telegramUser);
     }
 }

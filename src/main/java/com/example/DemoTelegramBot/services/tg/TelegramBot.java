@@ -3,14 +3,11 @@ package com.example.DemoTelegramBot.services.tg;
 import com.example.DemoTelegramBot.models.BotState;
 import com.example.DemoTelegramBot.models.Category;
 import com.example.DemoTelegramBot.models.TelegramUser;
-import com.example.DemoTelegramBot.repositories.TelegramUserRepository;
 import com.example.DemoTelegramBot.services.CategoryService;
 import com.example.DemoTelegramBot.services.TelegramUserService;
 import lombok.extern.slf4j.Slf4j;
-import org.glassfish.grizzly.http.util.TimeStamp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
@@ -70,7 +67,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                     sendCategoryTree(chatId, categoryService.getTree());
                     break;
                 case "/add_element":
-                    userStates.put(chatId,BotState.WAITING_FOR_ELEMENT_NAME);
+                    userStates.put(chatId, BotState.WAITING_FOR_ELEMENT_NAME);
                     sendMessage(chatId, "Введите название элемента:");
                     break;
                 case "/add_child_element":
@@ -78,7 +75,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                     sendMessage(chatId, "Введите название родительского и дочернего элементов через пробел:");
                     break;
                 case "/remove_element":
-                    userStates.put(chatId,BotState.WAITING_FOR_REMOVE_ELEMENT);
+                    userStates.put(chatId, BotState.WAITING_FOR_REMOVE_ELEMENT);
                     sendMessage(chatId, "Введите название элемента, который хотите удалить:");
                     break;
                 case "/help":
@@ -90,7 +87,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                             handleAddElementCommand(chatId, messageText);
                             break;
                         case WAITING_FOR_CHILD_ELEMENT_NAMES:
-                            handleAddChildElementCommand(chatId,messageText);
+                            handleAddChildElementCommand(chatId, messageText);
                             break;
                         case WAITING_FOR_REMOVE_ELEMENT:
                             handleRemoveElementCommand(chatId, messageText);
@@ -102,7 +99,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-
+    //после команды /start пользователь добавляется в БД
     private void registerUser(Message message) {
         if ((telegramUserService.getUser(message.getChatId())).isEmpty()) {
             var chatid = message.getChatId();
@@ -126,16 +123,16 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     public void startCommandReceived(long chatId, String name) {
-        String answer="";
-        if (name.equals(HELP_MSQ)){
-            answer=name ;
-        }
-        else
-         answer = "HI,  " + name + ", nice to meet you!";
+        String answer = "";
+        if (name.equals(HELP_MSQ)) {
+            answer = name;
+        } else
+            answer = "HI,  " + name + ", nice to meet you!";
         sendMessage(chatId, answer);
         log.info("Replied to user " + name);
     }
 
+    // метод для отправки сообщения пользователю
     public void sendMessage(long chatId, String textToSend) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
@@ -148,6 +145,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
+    //метод для отправки пользователю дерево категории(вызывается внутри команды /view_tree
     public void sendCategoryTree(Long chatId, List<Category> categories) {
         StringBuilder message = new StringBuilder("ДЕРЕВО КАТЕГОРИИ:\n");
         Set<Long> printedCategories = new HashSet<>();
@@ -155,6 +153,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         sendMessage(chatId, String.valueOf(message));
     }
 
+    //форматирует полученные данные из бд
     public void formatCategoryTree(StringBuilder message, List<Category> categories, int level, Set<Long> printedCategories) {
         for (Category category : categories) {
             if (printedCategories.add(category.getId())) {
@@ -170,6 +169,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
+    //метод для добавление категории
     public void handleAddElementCommand(Long chatId, String messageText) {
         Category newCategory = new Category();
         newCategory.setName(messageText);
@@ -204,6 +204,8 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     }
 
+    //метод удаляет в зависимости , есть ли дочерние категории
+    // у дочерних классов есть parent_id , и он будет проверяться с id родительского
     public void handleRemoveElementCommand(Long chatId, String messageText) {
         Category categoryToRemove = categoryService.getCategoryByName(messageText);
         if (categoryToRemove != null) {

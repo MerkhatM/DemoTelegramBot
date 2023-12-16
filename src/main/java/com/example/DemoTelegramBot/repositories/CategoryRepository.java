@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface CategoryRepository extends JpaRepository<Category,Long> {
+public interface CategoryRepository extends JpaRepository<Category, Long> {
     @Query(value = "WITH RECURSIVE category_tree AS (\n" +
             "  SELECT id, name, parent_id\n" +
             "  FROM category\n" +
