@@ -73,6 +73,8 @@ public class TelegramBot extends TelegramLongPollingBot {
                     sendMessage(chatId, "Введите название элемента:");
                     break;
                 case "/addChildElement":
+                    userStates.put(chatId, BotState.WAITING_FOR_CHILD_ELEMENT_NAMES);
+                    sendMessage(chatId, "Введите название родительского и дочернего элементов через пробел:");
                     break;
                 case "removeElement":
                     break;
@@ -83,6 +85,9 @@ public class TelegramBot extends TelegramLongPollingBot {
                     switch (currentState) {
                         case WAITING_FOR_ELEMENT_NAME:
                             handleAddElementCommand(chatId, messageText);
+                            break;
+                        case WAITING_FOR_CHILD_ELEMENT_NAMES:
+                            handleAddChildElementCommand(chatId,messageText);
                             break;
                         default:
                             sendMessage(chatId, "Sorry, command was not recognized");
@@ -164,5 +169,29 @@ public class TelegramBot extends TelegramLongPollingBot {
         sendMessage(chatId, "Элемент успешно добавлен.");
     }
 
+    private void handleAddChildElementCommand(Long chatId, String messageText) {
+        String[] commandParts = messageText.split(" ");
+        if (commandParts.length < 2) {
+            sendMessage(chatId, "Некорректная команда. Используйте: /addChildElement <Родитель> <Дочерний>");
+            return;
+        }
 
+        String parentName = commandParts[0];
+        String childName = commandParts[1];
+
+        Category parentCategory = categoryService.getCategoryByName(parentName);
+        if (parentCategory != null) {
+            Category newChild = new Category();
+            newChild.setName(childName);
+            newChild.setParent(parentCategory);
+            categoryService.addCategory(newChild);
+            sendMessage(chatId, "Дочерний элемент успешно добавлен.");
+        } else {
+            sendMessage(chatId, "Родительская категория не найдена.");
+        }
+        userStates.put(chatId, BotState.NORMAL);
+
+    }
 }
+
+
