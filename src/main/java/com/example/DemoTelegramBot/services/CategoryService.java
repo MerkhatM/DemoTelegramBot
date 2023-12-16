@@ -19,4 +19,12 @@ public class CategoryService {
     public  List<Category> getTree() {
         return categoryRepository.getCategoryTree();
     }
+
+    public void addCategory(Category category){
+        categoryRepository.save(category);
+    }
+
+    public Category getCategoryByName(String name){
+        return categoryRepository.findByName(name);
+    }
 }
