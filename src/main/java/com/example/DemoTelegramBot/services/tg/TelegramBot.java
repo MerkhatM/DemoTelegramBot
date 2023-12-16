@@ -42,12 +42,12 @@ public class TelegramBot extends TelegramLongPollingBot {
     public TelegramBot(@Value("${bot.key}") String botToken) {
         super(botToken);
         List<BotCommand> lists = new ArrayList<>();
-        lists.add(new BotCommand("/start", "get a welcome message"));
-        lists.add(new BotCommand("/viewTree", "view tree"));
-        lists.add(new BotCommand("/addElement", "Add an element to the tree. Usage: /addElement <Название Элемента>"));
-        lists.add(new BotCommand("/addChildElement", "Add a child element to the parent. Usage: /addChildElement <Родитель> <Дочерний>"));
-        lists.add(new BotCommand("/removeElement", "remove element"));
-        lists.add(new BotCommand("/help", "set your preferences"));
+        lists.add(new BotCommand("/start", "Приветствие"));
+        lists.add(new BotCommand("/viewTree", "Посмотреть дерево категории"));
+        lists.add(new BotCommand("/addElement", "Добавить категорию "));
+        lists.add(new BotCommand("/addChildElement", "Добавить дочернюю категорию для родителя"));
+        lists.add(new BotCommand("/removeElement", "Удалить категорию"));
+        lists.add(new BotCommand("/help", "Посмотреть список доступных команд"));
         try {
             this.execute(new SetMyCommands(lists, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException e) {
@@ -76,7 +76,9 @@ public class TelegramBot extends TelegramLongPollingBot {
                     userStates.put(chatId, BotState.WAITING_FOR_CHILD_ELEMENT_NAMES);
                     sendMessage(chatId, "Введите название родительского и дочернего элементов через пробел:");
                     break;
-                case "removeElement":
+                case "/removeElement":
+                    userStates.put(chatId,BotState.WAITING_FOR_REMOVE_ELEMENT);
+                    sendMessage(chatId, "Введите название элемента, который хотите удалить:");
                     break;
                 case "/help":
                     startCommandReceived(chatId, HELP_MSQ);
@@ -88,6 +90,9 @@ public class TelegramBot extends TelegramLongPollingBot {
                             break;
                         case WAITING_FOR_CHILD_ELEMENT_NAMES:
                             handleAddChildElementCommand(chatId,messageText);
+                            break;
+                        case WAITING_FOR_REMOVE_ELEMENT:
+                            handleRemoveElementCommand(chatId, messageText);
                             break;
                         default:
                             sendMessage(chatId, "Sorry, command was not recognized");
@@ -191,6 +196,17 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
         userStates.put(chatId, BotState.NORMAL);
 
+    }
+
+    public void handleRemoveElementCommand(Long chatId, String messageText) {
+        Category categoryToRemove = categoryService.getCategoryByName(messageText);
+        if (categoryToRemove != null) {
+            categoryService.deleteCategoryAndChildrem(categoryToRemove.getId());
+            sendMessage(chatId, "Элемент и все его дочерние элементы успешно удалены.");
+        } else {
+            sendMessage(chatId, "Элемент не найден.");
+        }
+        userStates.put(chatId, BotState.NORMAL);
     }
 }
 

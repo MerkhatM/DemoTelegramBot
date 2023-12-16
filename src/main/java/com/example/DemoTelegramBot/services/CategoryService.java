@@ -27,4 +27,16 @@ public class CategoryService {
     public Category getCategoryByName(String name){
         return categoryRepository.findByName(name);
     }
+
+    public void deleteCategoryAndChildrem(Long id){
+        Category category = categoryRepository.findById(id).orElse(null);
+        if(category!=null ){
+            List<Category> removingCategories=categoryRepository.findChildrenByParentId(id);
+            removingCategories.forEach(category1 -> category1.setParent(null));
+            categoryRepository.deleteAll(removingCategories);
+            categoryRepository.delete(category);
+        }
+
+
+    }
 }
