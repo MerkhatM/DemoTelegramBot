@@ -32,21 +32,22 @@ public class TelegramBot extends TelegramLongPollingBot {
     @Autowired
     private CategoryService categoryService;
     private Map<Long, BotState> userStates = new HashMap<>();
-    static final String HELP_MSQ = "Available commands:\n\n" +
-            "Type /start to see a welcome message\n\n" +
-            "Type /viewTree to see data about yourself\n\n" +
-            "Type /addElement to delete stored data abou youself\n\n" +
-            "Type /addChildElement to delete stored data abou youself\n\n" +
-            "Type /help to see this message again\n\n";
+    static final String HELP_MSQ = "Доступные команды:\n\n" +
+            "/start - получить приветствие и заргеистрировать пользователя \n\n" +
+            "/view_tre - посмотреть список категории\n\n" +
+            "/add_element - добавить категорию в корневую\n\n" +
+            "/add_child_element - добавить дочернюю категорию в родительскии. Введите название родительского и дочернего элементов через пробел\n\n" +
+            "/remove_element - удалить категорию. Если у категории есть дочерние, они тоже удалятся\n\n" +
+            "/help - посмотреть это сообщение еще раз\n\n";
 
     public TelegramBot(@Value("${bot.key}") String botToken) {
         super(botToken);
         List<BotCommand> lists = new ArrayList<>();
         lists.add(new BotCommand("/start", "Приветствие"));
-        lists.add(new BotCommand("/viewTree", "Посмотреть дерево категории"));
-        lists.add(new BotCommand("/addElement", "Добавить категорию "));
-        lists.add(new BotCommand("/addChildElement", "Добавить дочернюю категорию для родителя"));
-        lists.add(new BotCommand("/removeElement", "Удалить категорию"));
+        lists.add(new BotCommand("/view_tree", "Посмотреть дерево категории"));
+        lists.add(new BotCommand("/add_element", "Добавить категорию "));
+        lists.add(new BotCommand("/add_child_element", "Добавить дочернюю категорию для родителя"));
+        lists.add(new BotCommand("/remove_element", "Удалить категорию"));
         lists.add(new BotCommand("/help", "Посмотреть список доступных команд"));
         try {
             this.execute(new SetMyCommands(lists, new BotCommandScopeDefault(), null));
@@ -65,18 +66,18 @@ public class TelegramBot extends TelegramLongPollingBot {
                     startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
                     registerUser(update.getMessage());
                     break;
-                case "/viewTree":
+                case "/view_tree":
                     sendCategoryTree(chatId, categoryService.getTree());
                     break;
-                case "/addElement":
+                case "/add_element":
                     userStates.put(chatId,BotState.WAITING_FOR_ELEMENT_NAME);
                     sendMessage(chatId, "Введите название элемента:");
                     break;
-                case "/addChildElement":
+                case "/add_child_element":
                     userStates.put(chatId, BotState.WAITING_FOR_CHILD_ELEMENT_NAMES);
                     sendMessage(chatId, "Введите название родительского и дочернего элементов через пробел:");
                     break;
-                case "/removeElement":
+                case "/remove_element":
                     userStates.put(chatId,BotState.WAITING_FOR_REMOVE_ELEMENT);
                     sendMessage(chatId, "Введите название элемента, который хотите удалить:");
                     break;
@@ -125,7 +126,12 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     public void startCommandReceived(long chatId, String name) {
-        String answer = "HI,  " + name + ", nice to meet you!";
+        String answer="";
+        if (name.equals(HELP_MSQ)){
+            answer=name ;
+        }
+        else
+         answer = "HI,  " + name + ", nice to meet you!";
         sendMessage(chatId, answer);
         log.info("Replied to user " + name);
     }
