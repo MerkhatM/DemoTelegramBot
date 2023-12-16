@@ -27,7 +27,7 @@ spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 ```
 1. Создать базу данных "PanDevDemoBot"
-2. Изменить имя пользователя под вашу реляционную базу данных для `spring.datasource.username`
+2. Изменить имя пользователя под ваше имя пользователя в  реляционной базе данных для `spring.datasource.username`
 3. Изменить пароль для `spring.datasource.password`
 ___
 ### Настройка токена 
@@ -53,7 +53,7 @@ PostgreSQL
 
 ___
 ## Примечание:
-Если не добавляется команды через `BotCommand` следует добавлять команды через @BotFather:
+Если не добавляются команды через `BotCommand` следует добавлять команды через @BotFather:
 + view_tree - посмотреть дерево категории
 + add_element - добавить категорию   
 + add_child_element - добавить дочернюю категорию для родителя   
